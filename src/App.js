@@ -1,4 +1,3 @@
-// import React from 'react';
 import React, { Component, useState, useEffect  } from 'react';
 import logo from './logo.svg';
 import './App.css';
@@ -38,21 +37,14 @@ const StarDisplay = props => (
           <div className="star" key={starID}/>
               )}
   </>
-)
+);
 
-const Game = (props) => {
+const useGameState = ()=> {
   const [stars, setStars] = useState(utils.random(1,9));
   const [availableNums, setAvailableNums] = useState(utils.range(1,9));
   const [candidateNums, setCandidateNums] = useState([]);
   const [secondLeft, setSecondLeft] = useState(10);
   
-  const candidatesAreWrong = utils.sum(candidateNums) > stars;
-  // const gameIsDone = availableNums.length===0;
-  // const gameIsLost = secondLeft ==== 0;
-  const gameStatus = availableNums.length === 0
-  ?'won'
-  : secondLeft ===0 ? 'lost' :'active';
-
   useEffect(()=>{
     if(secondLeft >0 && availableNums.length >0){
     const timerID = setTimeout(()=>{
@@ -64,6 +56,38 @@ const Game = (props) => {
 
   console.log("renders..")
   })
+
+  const setGameState =(newCandidateNums) =>{
+    if(utils.sum(newCandidateNums) !== stars){
+      setCandidateNums(newCandidateNums)
+    }else{
+       const newAvailableNums = availableNums.filter(
+         n => !newCandidateNums.includes(n)
+       );
+       setStars(utils.randomSumIn(newAvailableNums,9))
+       setAvailableNums(newAvailableNums);
+       setCandidateNums([])
+    }  
+  }
+    return {stars, availableNums, candidateNums, secondLeft,setGameState}
+}
+
+const Game = (props) => {
+
+
+  const {
+    stars,
+    availableNums,
+    candidateNums,
+    secondLeft,
+    setGameState, 
+  }=useGameState();
+  
+
+  const candidatesAreWrong = utils.sum(candidateNums) > stars;
+  const gameStatus = availableNums.length === 0
+  ?'won'
+  : secondLeft ===0 ? 'lost' :'active';
 
   const numberStatus = (number) =>{
      if(!availableNums.includes(number)){
@@ -85,17 +109,8 @@ const Game = (props) => {
     currentStatus === 'available'
     ? candidateNums.concat(number)
     :candidateNums.filter(cn => cn !== number)
-    if(utils.sum(newCandidateNums) !== stars){
-      setCandidateNums(newCandidateNums)
-      // console.log(newCandidateNums)
-    }else{
-       const newAvailableNums = availableNums.filter(
-         n => !newCandidateNums.includes(n)
-       );
-       setStars(utils.randomSumIn(newAvailableNums,9))
-       setAvailableNums(newAvailableNums);
-       setCandidateNums([])
-    }
+
+    setGameState(newCandidateNums);
   }
 
   return (
